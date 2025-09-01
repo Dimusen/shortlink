@@ -1,0 +1,86 @@
+openapi: 3.0.0
+info:
+  title: Short Link Service API
+  description: API for creating and managing short links
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /api/v1/shorten:
+    post:
+      summary: Create a short link
+      description: Creates a new short link for the given original URL
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                original_url:
+                  type: string
+                  format: uri
+                  example: https://www.example.com/very-long-url
+                expires_at:
+                  type: string
+                  format: date-time
+                  example: "2023-12-31T23:59:59Z"
+              required:
+                - original_url
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  short_code:
+                    type: string
+                    example: abc123
+                  short_url:
+                    type: string
+                    format: uri
+                    example: http://localhost:8080/abc123
+                  original_url:
+                    type: string
+                    format: uri
+                    example: https://www.example.com/very-long-url
+                  expires_at:
+                    type: string
+                    format: date-time
+                    example: "2023-12-31T23:59:59Z"
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+  /{shortCode}:
+    get:
+      summary: Redirect to original URL
+      description: Redirects to the original URL associated with the short code
+      parameters:
+        - name: shortCode
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The short code to redirect
+      responses:
+        '302':
+          description: Redirect to original URL
+        '404':
+          description: Short link not found
+        '410':
+          description: Short link has expired
+        '429':
+          description: Too many requests
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
